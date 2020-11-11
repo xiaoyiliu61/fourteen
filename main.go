@@ -10,7 +10,7 @@ import (
 func main() {
 	key:=[]byte("C6190604")
 
-	data:="遇贵人先立业，遇良人先成家，遇阿姨成家立业!"
+	data:="遇贵人先立业，遇良人先成家."
 
 	//加密crypto
 	/*block,err:=des.NewCipher(key)
@@ -48,9 +48,21 @@ func main() {
 
 	fmt.Println("加密后的内容：",dstData)
 
-
-
-
+	/*
+	二、对数据进行解密
+	DES三元素：key，data，mode
+	*/
+    key1:=[]byte("C6190604")
+    data1:=dstData
+    block1,err:=des.NewCipher(key1)
+	if err!=nil {
+		panic(err.Error())
+	}
+    deMode:=cipher.NewCBCDecrypter(block1,key1)
+    originalData:=make([]byte,len(data1))
+    //分组解密
+    deMode.CryptBlocks(originalData,data1)
+    fmt.Println("解密后的内容：",string(originalData))
 }
 /*
 密文数据尾部填充
