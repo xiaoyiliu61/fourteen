@@ -1,16 +1,17 @@
 package main
 
 import (
+	_des "CryptCode/3des"
+	"CryptCode/aes"
+	"CryptCode/des"
 	"bytes"
-	"crypto/cipher"
-	"crypto/des"
 	"fmt"
 )
 
 func main() {
-	key:=[]byte("C6190604")
+	/*key:=[]byte("C6190604")
 
-	data:="遇贵人先立业，遇良人先成家."
+	data:="遇贵人先立业，遇良人先成家."*/
 
 	//加密crypto
 	/*block,err:=des.NewCipher(key)
@@ -34,8 +35,11 @@ func main() {
 
 	fmt.Println(string(deData))*/
 	//1.得到cipher
-	block,_:=des.NewCipher(key)
-
+	/*block,err:=des.NewCipher(key)
+	if err!=nil {
+		fmt.Println(err.Error())
+		return
+	}
 	//2.对数据明文进行结尾块填充
 	paddingData:=EndPadding([]byte(data),block.BlockSize())
 
@@ -52,7 +56,7 @@ func main() {
 	二、对数据进行解密
 	DES三元素：key，data，mode
 	*/
-    key1:=[]byte("C6190604")
+   /* key1:=[]byte("C6190604")
     data1:=dstData
     block1,err:=des.NewCipher(key1)
 	if err!=nil {
@@ -62,12 +66,55 @@ func main() {
     originalData:=make([]byte,len(data1))
     //分组解密
     deMode.CryptBlocks(originalData,data1)
-    fmt.Println("解密后的内容：",string(originalData))
+    originalData=utils.PKCS5EndPadding(data1,block.BlockSize())
+    fmt.Println("解密后的内容：",string(originalData))*/
+
+	key:=[]byte("20201112")
+	data:="窗含西岭千秋雪，门泊东吴万里船"
+	cipherText,err:=des.DESEnCrypt([]byte(data),key)
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+	originText,err:=des.DESDeCrypt(cipherText,key)
+	if err!=nil {
+		fmt.Println(err.Error())
+		return
+	}
+	fmt.Println("DES解密后:",string(originText))
+
+	key1:=[]byte("202011122020111220201112")
+	/*key2:=make([]byte,16)
+	key2=append(key2,[]byte("20201112")...)*/
+	data1:="穷在闹市无人问,富在深山有远亲"
+	cipherText1,err:=_des.TripleDESEncrypt([]byte(data1),key1)
+	if err != nil {
+		fmt.Println("3DES加密失败：",err.Error())
+		return
+	}
+	originText1,err:=_des.TripleDESDecrypt(cipherText1,key1)
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+	fmt.Println("3DES解密后的内容：",string(originText1))
+
+    key2:=[]byte("2020111220201112")
+    data2:="人生在世不称意,明朝散发弄扁舟"
+
+    cipherText2,err:=aes.AESEnCrypt([]byte(data2),key2)
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+	fmt.Println(cipherText2)
 }
+
+
 /*
-密文数据尾部填充
+明文数据尾部填充
 */
-func EndPadding(text []byte,blockSize int) []byte  {
+func PKCS5Padding(text []byte,blockSize int) []byte  {
     //计算要填充的块内容的大小
 	paddingSize:=blockSize-len(text)%blockSize
 	paddingText:=bytes.Repeat([]byte{byte(paddingSize)},paddingSize)

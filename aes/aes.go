@@ -9,7 +9,7 @@ import (
 /*
 使用AES算法对明文进行加密
 */
-func AesEnCrypt(origin []byte,key []byte) ([]byte,error) {
+func AESEnCrypt(origin []byte,key []byte) ([]byte,error) {
 	//3元素：key ，data ，mode
 	block,err:=aes.NewCipher(key)
 	if err != nil {

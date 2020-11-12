@@ -9,17 +9,17 @@ import (
 /*
 该函数用于实现3des算法的加密
 */
-func TripleDesEncrypt(origintext ,key []byte) ([]byte,error)  {
+func TripleDESEncrypt(originText ,key []byte) ([]byte,error)  {
  //1.实例化一个cipher
-  block,err:=des.NewTripleDESCipher(key)
+    block,err:=des.NewTripleDESCipher(key)
 	if err != nil {
 		return nil,err
 	}
-	//对明文进行尾部填充
-	cryptData:=utils.PKCS5EndPadding(origintext,block.BlockSize())
+	//2.对明文进行尾部填充
+	cryptData:=utils.PKCS5EndPadding(originText,block.BlockSize())
 	//3.实例化加密模式mode
-	mode:=cipher.NewCBCEncrypter(block,key)
-	//对填充后的明文进行分组加密
+	mode:=cipher.NewCBCEncrypter(block,key[:block.BlockSize()])
+	//4.对填充后的明文进行分组加密
     cipherText:=make([]byte,len(cryptData))
 	mode.CryptBlocks(cipherText,cryptData)
     return cipherText,nil
@@ -28,15 +28,16 @@ func TripleDesEncrypt(origintext ,key []byte) ([]byte,error)  {
 /*
 该函数用于密文进行解密，并返回明文
 */
-func TripleDESDecrypt(ciphertext []byte, key []byte) ([]byte,error) {
+func TripleDESDecrypt(cipherText []byte, key []byte) ([]byte,error) {
    block,err:=des.NewTripleDESCipher(key)
 	if err != nil {
 		return nil, err
 	}
 	//2.不需要对密文进行尾部填充，
-	blockMoed:=cipher.NewCBCDecrypter(block,key)
-    originText:=make([]byte,len(ciphertext))
-    blockMoed.CryptBlocks(ciphertext,originText)
+	blockMode:=cipher.NewCBCDecrypter(block,key[0:block.BlockSize()])
+    originText:=make([]byte,len(cipherText))
+    blockMode.CryptBlocks(originText,cipherText)
+    utils.ClearPKCS5Padding(originText,block.BlockSize())
     return originText,nil
 }
 
