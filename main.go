@@ -1,7 +1,7 @@
 package main
 
 import (
-	_des "CryptCode/3des"
+	"CryptCode/3des"
 	"CryptCode/aes"
 	"CryptCode/des"
 	"bytes"
@@ -83,31 +83,35 @@ func main() {
 	}
 	fmt.Println("DES解密后:",string(originText))
 
-	key1:=[]byte("202011122020111220201112")
-	/*key2:=make([]byte,16)
-	key2=append(key2,[]byte("20201112")...)*/
-	data1:="穷在闹市无人问,富在深山有远亲"
-	cipherText1,err:=_des.TripleDESEncrypt([]byte(data1),key1)
+	//二、3DES加解密
+	key1 := []byte("202011122020111220201112") //3des的秘钥长度是24字节
+	data1 := "穷在闹市无人问，富在深山有远亲"
+	cipherText1, err := _des.TripleDESEncrypt([]byte(data1), key1)
 	if err != nil {
-		fmt.Println("3DES加密失败：",err.Error())
+		fmt.Println("3DES加密失败:", err.Error())
 		return
 	}
-	originText1,err:=_des.TripleDESDecrypt(cipherText1,key1)
+	originalText1, err := _des.TripleDESDecrypt(cipherText1, key1)
 	if err != nil {
 		fmt.Println(err.Error())
 		return
 	}
-	fmt.Println("3DES解密后的内容：",string(originText1))
+	fmt.Println("3DES解密后的内容：", string(originalText1))
 
     key2:=[]byte("2020111220201112")
-    data2:="人生在世不称意,明朝散发弄扁舟"
+    data2:="人生在世不称意，明朝散发弄扁舟"
 
     cipherText2,err:=aes.AESEnCrypt([]byte(data2),key2)
 	if err != nil {
 		fmt.Println(err.Error())
 		return
 	}
-	fmt.Println(cipherText2)
+    originText2,err:=aes.AESDeCrypt(cipherText2,key2)
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+	fmt.Println("aes解密后的内容：",string(originText2))
 }
 
 

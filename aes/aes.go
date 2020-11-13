@@ -4,6 +4,7 @@ import (
 	"CryptCode/utils"
 	"crypto/aes"
 	"crypto/cipher"
+	"fmt"
 )
 
 /*
@@ -22,4 +23,26 @@ func AESEnCrypt(origin []byte,key []byte) ([]byte,error) {
 	cipherData:=make([]byte,len(cryptData))
 	blockMode.CryptBlocks(cipherData,cryptData)
 	return cipherData, nil
+}
+
+func AESDeCrypt(data []byte, key []byte) ([]byte, error) {
+	block,err:=aes.NewCipher(key)
+	if err != nil {
+		fmt.Println(err.Error())
+		return nil,err
+	}
+	/*blockMode:=cipher.NewCBCDecrypter(block,key)
+	originData:=make([]byte,len(origin))
+	blockMode.CryptBlocks(originData,origin)
+	utils.ClearPKCS5Padding(originData,block.BlockSize())
+	return originData,nil
+	block, err := des.NewCipher(key)
+	if err != nil {
+		return nil, err
+	}*/
+	blockMode := cipher.NewCBCDecrypter(block, key[:block.BlockSize()])
+	originData := make([]byte, len(data))
+	blockMode.CryptBlocks(originData, data)
+	originData = utils.ClearPKCS5Padding(originData, block.BlockSize())
+	return originData, nil
 }
