@@ -98,7 +98,7 @@ func main() {
 	}
 	fmt.Println("3DES解密后的内容：", string(originalText1))
 
-    key2:=[]byte("2020111220201112")
+    key2:=[]byte("20201112··20201112")
     data2:="人生在世不称意，明朝散发弄扁舟"
 
     cipherText2,err:=aes.AESEnCrypt([]byte(data2),key2)
