@@ -4,6 +4,7 @@ import (
 	"CryptCode/3des"
 	"CryptCode/aes"
 	"CryptCode/des"
+	"CryptCode/rsa"
 	"bytes"
 	"fmt"
 )
@@ -98,11 +99,11 @@ func main() {
 	}
 	fmt.Println("3DES解密后的内容：", string(originalText1))
 
+	//三：AES算法
     key2:=[]byte("20201112··" +
     	"" +
     	"20201112")
     data2:="人生在世不称意，明朝散发弄扁舟"
-
     cipherText2,err:=aes.AESEnCrypt([]byte(data2),key2)
 	if err != nil {
 		fmt.Println(err.Error())
@@ -114,8 +115,39 @@ func main() {
 		return
 	}
 	fmt.Println("aes解密后的内容：",string(originText2))
-}
 
+   //四：RSA算法
+   data4:="把悲伤留给自己"
+   priv,err:=rsa.CreatePairKeys()
+   if err!=nil{
+   	fmt.Println("生成秘钥对出错",err.Error())
+	   return
+   }
+   //将生成的私钥保存到硬盘上一个pem文件中，
+    err =rsa.GeneratePemFileByPrivateKey(priv)
+	if err != nil {
+		fmt.Println("生成私钥的pem文件遇到错误：",err.Error())
+	}
+
+   cipherText4,err:=rsa.RSAEncrypt(priv.PublicKey,[]byte(data4))
+	if err != nil {
+		fmt.Println("rsa算法加密失败",err.Error())
+		return
+	}
+	originalText4,err:=rsa.RSADecrypt(priv,cipherText4)
+	if err != nil {
+		fmt.Println("rsa算法解密失败",err.Error())
+		return
+	}
+	fmt.Println("rsa解密成功，结果是",string(originalText4))
+    //对源文件数据进行签名
+    signText4,err:=rsa.RSASign(priv,[]byte(data4))
+	if err != nil {
+		fmt.Println("rsa算法签名失败：",err.Error())
+		return
+	}
+}
+   
 
 /*
 明文数据尾部填充
