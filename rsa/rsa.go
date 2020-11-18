@@ -1,103 +1,142 @@
 package rsa
 
 import (
-	"CryptCode/utils"
-	"crypto"
-	"crypto/rand"
 	"crypto/rsa"
-	"crypto/x509"
-	"encoding/pem"
+	"crypto/rand"
 	"flag"
+	"crypto"
+	"CryptCode/utils"
+	"crypto/x509"
 	"os"
+	"encoding/pem"
 )
 
-func CreatePairKeys() (*rsa.PrivateKey,error) {
-	//1.先生成私钥
-	var bits int
-	flag.IntVar(&bits,"b",1024,"密钥长度")
+const RSA_PRIVATE = "RSA PRIVATE KEY"
+const RSA_PUBLIC = "RSA PUBLIC KEY"
 
-	privateKey,err:=rsa.GenerateKey(rand.Reader,bits)
-	if err!=nil{
-		return nil,err
+/**
+ * 私钥：
+ * 公钥：
+ * 汉森堡
+ */
+func CreatePairKeys() (*rsa.PrivateKey, error) {
+	//1、先生成私钥
+	var bits int
+	flag.IntVar(&bits, "b", 2048, "密钥长度")
+	//fmt.Println(bits)
+	privateKey, err := rsa.GenerateKey(rand.Reader, bits)
+	if err != nil {
+		return nil, err
 	}
-	//2.根据私钥生成公钥
-	
-	//3.将私钥和公钥进行返回
-	return privateKey,nil
+
+	//2、根据私钥生成公钥
+	//publicKey := privateKey.Public()
+	//3、将私钥和公钥进行返回
+	return privateKey, nil
 }
 
-/*
-根据给定的私钥数据生成对应的pem认证文件
-*/
-func GeneratePemFileByPrivateKey(pri *rsa.PrivateKey) (error) {
+/**
+ * 根据给定的私钥数据，生成对应的pem文件
+ */
+func generatePriFileByPrivateKey(pri *rsa.PrivateKey, file_name string) (error) {
+
 	//根据PKCS1规则，序列化后的私钥
-	priStream:=x509.MarshalPKCS1PrivateKey(pri)
-	privatFile,err:=os.Create("rsa_pri.pem")//存私钥生成文件
+	priStream := x509.MarshalPKCS1PrivateKey(pri)
+
+	//pem文件,此时，privateFile文件为空
+	privatFile, err := os.Create("rsa_pri_" + file_name + ".pem") //存私钥的生成的文件
 	if err != nil {
 		return err
 	}
-	//pem
-	block:=&pem.Block{
-		Type:    "RSA PRIVATE KEY",
-		Bytes:   priStream,
+
+	//pem文件中的格式 结构体
+	block := &pem.Block{
+		Type:  RSA_PRIVATE,
+		Bytes: priStream,
 	}
 
-	err=pem.Encode(privatFile,block)
+	//将准备好的格式内容写入到pem文件中
+	err = pem.Encode(privatFile, block)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func GeneratePubFileByPupKey(pub rsa.PublicKey) (error) {
-	strem:=x509.MarshalPKCS1PublicKey(&pub)
-	block:=pem.Block{
-		Type:    "RSA PRIVATE KEY",
-		Bytes:   strem,
+/**
+ * 根据公钥生成对应的pem文件，持久化存储
+ */
+func generatePubFileByPubKey(pub rsa.PublicKey, file_name string) error {
+	stream := x509.MarshalPKCS1PublicKey(&pub)
+
+	block := pem.Block{
+		Type:  RSA_PUBLIC,
+		Bytes: stream,
 	}
-	pubFile,err:=os.Create("rsa_pub.pem")
+
+	pubFile, err := os.Create("rsa_pub_" + file_name + ".pem")
 	if err != nil {
 		return err
 	}
-	return pem.Encode(pubFile,&block)
+	return pem.Encode(pubFile, &block)
 }
 
+/**
+ * 根据用户传入的内容，自动创建公私钥，并生成相应格式的证书文件
+ */
 func GenerateKeys(file_name string) error {
-	pri,err:=CreatePairKeys()
+	//1、生成私钥
+	pri, err := CreatePairKeys()
 	if err != nil {
 		return err
 	}
-
-}
-
-
-/*
-使用RSA算法对数据进行加密，返回加加密后的密文
-*/
-func RSAEncrypt(key rsa.PublicKey,data []byte) ([]byte,error)  {
-   return rsa.EncryptPKCS1v15(rand.Reader,&key,data)
-
-}
-
-func RSADecrypt(private *rsa.PrivateKey, cipher []byte)([]byte,error)  {
-	return rsa.DecryptPKCS1v15(rand.Reader,private,cipher)
-}
-
-//私钥签名，公钥验签
-func RSASign(private *rsa.PrivateKey,data []byte,hash crypto.Hash) ([]byte,error)  {
-	if hash == crypto.MD5 {
-		hashed:=utils.Md5Hash(data)
-		return rsa.SignPKCS1v15(rand.Reader,private,crypto.MD5,hashed)
-	} else if hash == crypto.SHA256 {
-		hashed:=utils.Sha256Hash(data)
-		return rsa.SignPKCS1v15(rand.Reader,private,crypto.SHA256,hashed)
+	//2.创建私钥文件
+	err = generatePriFileByPrivateKey(pri, file_name)
+	if err != nil {
+		return err
 	}
-	 
+	//3、公钥文件
+	err = generatePubFileByPubKey(pri.PublicKey, file_name)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
-func RSAVerify(pub rsa.PrivateKey,data []byte, signText []byte) (bool,error) {
-	hashed:=utils.Md5Hash(data)
-	err:=rsa.VerifyPKCS1v15(&pub,crypto.MD5,hashed,signText)
-	return err==nil,err
+//=========================第一种组合：公钥加密，私钥解密==============================//
+
+/**
+ * 使用RSA算法对数据进行加密,返回加密后的密文
+ */
+func RSAEncrypt(key rsa.PublicKey, data []byte) ([]byte, error) {
+
+	return rsa.EncryptPKCS1v15(rand.Reader, &key, data)
 }
 
+/**
+ * 使用RSA算法对密文数据进行解密，返回解密后的明文
+ */
+func RSADecrypt(private *rsa.PrivateKey, cipher []byte) ([]byte, error) {
+	return rsa.DecryptPKCS1v15(rand.Reader, private, cipher)
+}
+
+//=========================第二种组合：私钥签名，公钥验签==============================//
+
+/**
+ * 使用RSA算法对数据进行数字签名,并返回签名信息
+ */
+func RSASign(private *rsa.PrivateKey, data []byte) ([]byte, error) {
+	hashed := utils.Md5Hash(data)
+	return rsa.SignPKCS1v15(rand.Reader, private, crypto.MD5, hashed)
+}
+
+/**
+ * 使用RSA算法对数据进行签名验证，并返回签名验证的结果
+ * 验证通过，返回true
+ * 验证不通过，返回false, 同时error中有错误信息
+ */
+func RSAVerify(pub rsa.PublicKey, data []byte, signText []byte) (bool, error) {
+	hashed := utils.Md5Hash(data)
+	err := rsa.VerifyPKCS1v15(&pub, crypto.MD5, hashed, signText)
+	return err == nil, err
+}
