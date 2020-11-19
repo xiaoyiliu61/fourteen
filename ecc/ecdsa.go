@@ -1,10 +1,10 @@
 package ecc
 
 import (
-	"crypto/ecdsa"
-	"crypto/rand"
-	"crypto/elliptic"
 	"CryptCode/utils"
+	"crypto/ecdsa"
+	"crypto/elliptic"
+	"crypto/rand"
 	"math/big"
 )
 

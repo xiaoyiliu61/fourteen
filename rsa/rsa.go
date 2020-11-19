@@ -7,6 +7,8 @@ import (
 	"crypto"
 	"CryptCode/utils"
 	"crypto/x509"
+	"fmt"
+	"io/ioutil"
 	"os"
 	"encoding/pem"
 )
@@ -62,6 +64,30 @@ func generatePriFileByPrivateKey(pri *rsa.PrivateKey, file_name string) (error) 
 	}
 	return nil
 }
+/*
+读取pem文件格式总的私钥数据
+*/
+func ReadPemPriKey(file_name string) (*rsa.PrivateKey,error)  {
+	blockBytes,err:=ioutil.ReadFile(file_name)
+	if err != nil {
+		return nil,err
+	}
+	//pem.decode:将byte数据解码为内存中的实例对象
+	block,_:=pem.Decode(blockBytes)
+	fmt.Println(block.Bytes)
+	priBytes:=blockBytes
+	prikey,err:=x509.ParsePKCS1PrivateKey(priBytes)
+	return prikey,err
+}
+
+func ReadPemPubKey(file_name string) (*rsa.PublicKey, error) {
+	blockBytes,err:=ioutil.ReadFile(file_name)
+	if err != nil {
+		return nil,err
+	}
+	pubKey,err:=x509.ParsePKCS1PublicKey(blockBytes)
+    return pubKey,err
+}
 
 /**
  * 根据公钥生成对应的pem文件，持久化存储
@@ -80,6 +106,8 @@ func generatePubFileByPubKey(pub rsa.PublicKey, file_name string) error {
 	}
 	return pem.Encode(pubFile, &block)
 }
+
+//------关于pem证书文件的生成和读取
 
 /**
  * 根据用户传入的内容，自动创建公私钥，并生成相应格式的证书文件
